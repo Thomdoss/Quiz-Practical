@@ -1,4 +1,4 @@
-/** Created by Thomas DOS SANTOS */
+/*Created by Thomas DOS SANTOS*/
 
 // Require modules :
 const express = require('express');
@@ -6,55 +6,71 @@ const mysql = require('mysql2');
 
 const app = express();
 
-// Define the port = 3306
-const PORT = 3306;
+// Define the port = 3000
+const PORT = 3000;
 
-// Create the connection
-const Connection_db = mysql.createConnection({
+// Create the connection 
+const connection = mysql.createConnection({
    host: 'localhost',
    user: 'root',
    password: '',
-   database: 'my_db',
 });
 
-Connection_db.connect((err) => {
+// Connect to MySQL
+connection.connect((err) => {
    if (err) {
       throw err;
    }
-   console.log('Connection to the MySQL database !');
+   console.log('Connected to MySQL!');
 });
 
-// Create the get() request :
+// Create the database if not exists
 app.get('/db', (req, res) => {
-   let sql = 'CREATE DATABASE if not exists my_DB';
-   Connection_db.query(sql, (error, result) => {
+   let sql = 'CREATE DATABASE IF NOT EXISTS my_DB';
+   connection.query(sql, (error, result) => {
       if (error) {
          console.log(error.message);
          throw error;
       }
       console.log(result);
-      res.send('A new database was successfully created !');
+      res.send('A new database was successfully created!');
    });
+});
+
+// Reconnect to the newly created database
+const Connection_db = mysql.createConnection({
+   host: 'localhost',
+   user: 'root',
+   password: '',
+   database: 'my_DB', // Make sure to specify the database here
+});
+
+// Connect to the database again
+Connection_db.connect((err) => {
+   if (err) {
+      throw err;
+   }
+   console.log('Connected to my_DB database!');
 });
 
 // Create a table
 app.get('/users', (req, res) => {
    const sql =
-      'CREATE TABLE users(user_id INT AUTO_INCREMENT, name VARCHAR(50), email VARCHAR(70), PRIMARY KEY(user_id))';
+      'CREATE TABLE IF NOT EXISTS users(user_id INT AUTO_INCREMENT, name VARCHAR(50), email VARCHAR(70), PRIMARY KEY(user_id))';
    Connection_db.query(sql, (err, result) => {
       if (err) {
          throw err;
       }
       console.log(result);
-      res.send('users table is created!');
+      res.send('Users table is created!');
    });
 });
 
-// Insert a user:
+// Insert a user
 app.get('/adduser', (req, res) => {
    let name = 'John';
    let email = 'johnson1@efrei.net';
-   const sql = `INSERT INTO users (name,  email) VALUES (?, ?);`;
+   const sql = `INSERT INTO users (name, email) VALUES (?, ?)`;
 
    // Creating queries
    Connection_db.query(sql, [name, email], (err, result) => {
@@ -66,7 +82,7 @@ app.get('/adduser', (req, res) => {
    });
 });
 
-// Select all the user :
+// Select all the users
 app.get('/', (req, res) => {
    const sql = `SELECT * FROM users`;
 
@@ -79,7 +95,7 @@ app.get('/', (req, res) => {
    });
 });
 
-// Select an user by their id :
+// Select a user by their id
 app.get('/select/:id', (req, res) => {
    const sql = `SELECT * FROM users WHERE user_id= ${req.params.id}`;
    Connection_db.query(sql, (err, record) => {
@@ -91,9 +107,8 @@ app.get('/select/:id', (req, res) => {
    });
 });
 
-// Update User:
+// Update User
 app.get('/update/:id', (req, res) => {
-   res.send('One record was updated');
    let name = 'Johnson';
    const sql = `UPDATE users SET name = '${name}' WHERE user_id= ${req.params.id}`;
    Connection_db.query(sql, (err, record) => {
@@ -101,12 +116,12 @@ app.get('/update/:id', (req, res) => {
          throw err;
       }
       console.log(record);
+      res.send('One record was updated');
    });
 });
 
-// Delete User:
+// Delete User
 app.get('/delete/:id', (req, res) => {
-   res.send('One record was deleted');
    const sql = `DELETE FROM users WHERE user_id= ${req.params.id}`;
    Connection_db.query(sql, (err, result) => {
       if (err) {
@@ -118,7 +133,7 @@ app.get('/delete/:id', (req, res) => {
 });
 
 app.get('/crud', (req, res) => {
-   res.send('Hello world ! Hello Efrei !');
+   res.send('Hello world! Hello Efrei!');
 });
 
 app.listen(PORT, () => {
